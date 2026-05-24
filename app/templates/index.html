@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alexa Sentiment Analysis</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+
+    select, textarea {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      color: #2d3748;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    select:focus, textarea:focus { border-color: #4299e1; }
+
+    textarea {
+      height: 130px;
+      resize: vertical;
+      margin-bottom: 20px;
+    }
+
+    select { margin-bottom: 20px; }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #3182ce;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover  { background: #2b6cb0; }
+    button:active { background: #2c5282; }
+
+    .result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .result.positive { background: #f0fff4; border: 1.5px solid #68d391; }
+    .result.negative { background: #fff5f5; border: 1.5px solid #fc8181; }
+
+    .result-label {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .positive .result-label { color: #276749; }
+    .negative .result-label { color: #9b2c2c; }
+
+    .bars { display: flex; flex-direction: column; gap: 10px; }
+
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+
+    .bar-label {
+      width: 70px;
+      font-size: 13px;
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .bar-track {
+      flex: 1;
+      background: #edf2f7;
+      border-radius: 6px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s ease;
+    }
+
+    .bar-fill.pos { background: #48bb78; }
+    .bar-fill.neg { background: #fc8181; }
+
+    .bar-value {
+      width: 42px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2d3748;
+      text-align: right;
+    }
+
+    .threshold-note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #a0aec0;
+      text-align: right;
+    }
+
+    .error {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: #fff5f5;
+      border: 1.5px solid #fc8181;
+      border-radius: 8px;
+      color: #9b2c2c;
+      font-size: 13px;
+      display: none;
+    }
+
+    .spinner {
+      display: none;
+      text-align: center;
+      margin-top: 16px;
+      color: #a0aec0;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>🎙️ Amazon Alexa — Sentiment Analysis</h1>
+    <p>Введи отзыв — модель определит тональность</p>
+  </div>
+
+  <label for="variation">Модель устройства</label>
+  <select id="variation">
+    {% for v in variations %}
+      <option value="{{ v }}">{{ v }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="review">Текст отзыва</label>
+  <textarea id="review" placeholder="например: I love this device, it works perfectly!"></textarea>
+
+  <button onclick="predict()">Определить тональность</button>
+
+  <div class="spinner" id="spinner">Анализируем...</div>
+  <div class="error"  id="error"></div>
+
+  <div class="result" id="result">
+    <div class="result-label" id="result-label"></div>
+    <div class="bars">
+      <div class="bar-row">
+        <span class="bar-label">Positive</span>
+        <div class="bar-track">
+          <div class="bar-fill pos" id="bar-pos" style="width:0%"></div>
+        </div>
+        <span class="bar-value" id="val-pos"></span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Negative</span>
+        <div class="bar-track">
+          <div class="bar-fill neg" id="bar-neg" style="width:0%"></div>
+        </div>
+        <span class="bar-value" id="val-neg"></span>
+      </div>
+    </div>
+    <div class="threshold-note" id="threshold-note"></div>
+  </div>
+</div>
+
+<script>
+async function predict() {
+  const review    = document.getElementById('review').value.trim();
+  const variation = document.getElementById('variation').value;
+  const resultEl  = document.getElementById('result');
+  const errorEl   = document.getElementById('error');
+  const spinner   = document.getElementById('spinner');
+
+  resultEl.style.display = 'none';
+  errorEl.style.display  = 'none';
+
+  if (!review) {
+    errorEl.textContent    = 'Введите текст отзыва.';
+    errorEl.style.display  = 'block';
+    return;
+  }
+
+  spinner.style.display = 'block';
+
+  try {
+    const resp = await fetch('/predict', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ review, variation })
+    });
+
+    const data = await resp.json();
+    spinner.style.display = 'none';
+
+    if (data.error) {
+      errorEl.textContent   = data.error;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const isNeg = data.label === 'Negative';
+
+    resultEl.className             = 'result ' + (isNeg ? 'negative' : 'positive');
+    document.getElementById('result-label').textContent =
+      (isNeg ? '😞 Negative' : '😊 Positive');
+
+    document.getElementById('bar-pos').style.width  = data.proba_pos + '%';
+    document.getElementById('bar-neg').style.width  = data.proba_neg + '%';
+    document.getElementById('val-pos').textContent  = data.proba_pos + '%';
+    document.getElementById('val-neg').textContent  = data.proba_neg + '%';
+    document.getElementById('threshold-note').textContent =
+      `threshold: ${data.threshold}`;
+
+    resultEl.style.display = 'block';
+
+  } catch (e) {
+    spinner.style.display  = 'none';
+    errorEl.textContent    = 'Ошибка соединения с сервером.';
+    errorEl.style.display  = 'block';
+  }
+}
+
+document.getElementById('review').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) predict();
+});
+</script>
+</body>
+</html>
