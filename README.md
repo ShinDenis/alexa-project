@@ -1,5 +1,10 @@
 # Amazon Alexa Reviews — Sentiment Analysis
 
+
+___
+## Web-demo. Запуск - [🚀 Live Demo](https://alexa-project.onrender.com)
+___
+
 Проект по классификации отзывов на устройства Amazon Alexa.
 
 Бинарная классификация, определение характера отзыва: **Positive / Negative**.
@@ -57,8 +62,3 @@ amazon-alexa-sentiment/
 ├── requirements.txt
 └── README.md
 ```
-
-
----
-## Демо.
-
