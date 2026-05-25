@@ -2,14 +2,18 @@ import os
 import joblib
 from flask import Flask, render_template, request, jsonify
 from preprocessing import prepare_input
+import asyncio
+import httpx
+import logging
 
-# ── Загрузка модели ───────────────────────────────────────────────────────────
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'model.pkl')
 bundle     = joblib.load(MODEL_PATH)
 pipeline   = bundle['pipeline']
 threshold  = bundle['best_threshold']
 
-# ── Flask ─────────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 
 VARIATIONS = ['Echo', 'Echo Dot', 'Echo Show', 'Echo Spot', 'Echo Plus', 'Fire TV Stick']
@@ -17,7 +21,6 @@ VARIATIONS = ['Echo', 'Echo Dot', 'Echo Show', 'Echo Spot', 'Echo Plus', 'Fire T
 @app.route('/')
 def index():
     return render_template('index.html', variations=VARIATIONS)
-
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -41,7 +44,25 @@ def predict():
         'threshold': threshold
     })
 
+async def keep_alive():
+    async with httpx.AsyncClient() as http:
+        while True:
+            await asyncio.sleep(600)
+            try:
+                await http.get("https://alexa-project.onrender.com/", timeout=5)
+                logger.info("✅ Keep-alive ping отправлен")
+            except Exception as e:
+                logger.warning(f"⚠️ Keep-alive ошибка: {e}")
+
+def start_keep_alive():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(keep_alive())
 
 if __name__ == '__main__':
+    # Запускаем keep-alive в отдельном потоке
+    import threading
+    threading.Thread(target=start_keep_alive, daemon=True).start()
+
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
