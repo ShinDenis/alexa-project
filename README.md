@@ -29,18 +29,19 @@ ___
 
 ## Результаты моделей
 
-| Модель | Accuracy | ROC-AUC | Negative F1 |
-|---|---|---|---|
-| LogisticRegression | 0.933 | 0.950 | 0.682 |
-| RandomForest | 0.926 | 0.928 | 0.588 |
-| GradientBoosting | 0.946 | 0.950 | 0.689 |
-| XGBoost | 0.916 | 0.886 | 0.506 |
-| Naive Bayes | 0.938 | 0.921 | 0.536 |
-| KNN | 0.919 | 0.792 | 0.490 |
-| **LinearSVC** ✅ | **0.938** | **0.949** | **0.699** |
-| SuperLearner | 0.941 | — | 0.700 |
+| Model                      | Test Accuracy | Test ROC-AUC | Test PR-AUC Negative | Best Threshold | Best Negative - precision | Best Negative - recall | Best Negative - f1-score |
+|----------------------------|---------------|--------------|--------------------- |----------------|---------------------------|------------------------|--------------------------|
+| LogisticRegression         | 0.914         | 0.947        | 0.648                | 0.47           | 0.571                     | 0.800                  | 0.667                    |
+| **LinearSVC**              | 0.916         | 0.949        | 0.664                | 0.77           | **0.604**                 | **0.829**              | **0.699**                |
+| DecisionTreeClassifier     | 0.926         | 0.928        | 0.609                | 0.54           | 0.500                     | 0.714                  | 0.588                    |
+| GradientBoostingClassifier | 0.946         | 0.950        | 0.756                | 0.69           | 0.808                     | 0.600                  | 0.689                    |
+| XGBClassifier              | 0.914         | 0.904        | 0.455                | 0.88           | 0.472                     | 0.486                  | 0.479                    |
+| MultinomialNB              | 0.938         | 0.921        | 0.613                | 0.74           | 0.714                     | 0.429                  | 0.536                    |
+| KNeighborsClassifier       | 0.919         | 0.792        | 0.398                | 0.82           | 0.381                     | 0.686                  | 0.490                    |
+| StackingClassifier         | 0.862         | 0.955        | 0.685                | 0.21           | 0.622                     | 0.800                  | 0.700                    |
 
-**Лучшая модель — LinearSVC** с калиброванными вероятностями и подобранным порогом 0.77.
+## Так как основной целью бизнеса является отслеживание и работа с негативными отзывами в целях улучшения качества продукта, выбор модели следующий:
+### Лучшая модель — **LinearSVC** с калиброванными вероятностями и подобранным порогом 0.77.
 
 ---
 
@@ -54,8 +55,8 @@ amazon-alexa-sentiment/
 │   └── templates/
 │       └── index.html
 ├── notebooks/
-│   ├── Amazon_Alexa_analysis.ipynb          # EDA анализ
-│   └── Amazon_Alexa_fe_model_pipeline.ipynb # Инженерия, модели
+│   ├── Analysis.ipynb                  # EDA анализ
+│   └── Feature_eng_Model_Results.ipynb # Инженерия, модели, результаты.
 ├── dataset/
 │   └── amazon_alexa.tsv
 ├── render.yaml
