@@ -54,15 +54,13 @@ async def keep_alive():
             except Exception as e:
                 logger.warning(f"⚠️ Keep-alive ошибка: {e}")
 
-def start_keep_alive():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(keep_alive())
-
 if __name__ == '__main__':
-    # Запускаем keep-alive в отдельном потоке
     import threading
-    threading.Thread(target=start_keep_alive, daemon=True).start()
+
+    def run_keep_alive():
+        asyncio.run(keep_alive())
+
+    threading.Thread(target=run_keep_alive, daemon=True).start()
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
