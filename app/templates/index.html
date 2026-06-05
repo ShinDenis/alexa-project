@@ -256,14 +256,14 @@ async function predict() {
 
     resultEl.className             = 'result ' + (isNeg ? 'negative' : 'positive');
     document.getElementById('result-label').textContent =
-      (isNeg ? '😞 Negative' : '😊 Positive');
+      (isNeg ? 'Negative' : 'Positive');
 
     document.getElementById('bar-pos').style.width  = data.proba_pos + '%';
     document.getElementById('bar-neg').style.width  = data.proba_neg + '%';
     document.getElementById('val-pos').textContent  = data.proba_pos + '%';
     document.getElementById('val-neg').textContent  = data.proba_neg + '%';
     document.getElementById('threshold-note').textContent =
-      `threshold: ${data.threshold}`;
+      `threshold: ${data.threshold.toFixed(2)}`;
 
     resultEl.style.display = 'block';
 
